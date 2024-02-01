@@ -1,7 +1,7 @@
 import csv
+import os
 
-# Define the CSV file path
-csv_file_path = "employee_data.csv"
+csv_file_path = os.path.abspath("employee_data.csv")
 
 # Read the CSV file into a list of dictionaries
 with open(csv_file_path, 'r') as file:
@@ -9,20 +9,20 @@ with open(csv_file_path, 'r') as file:
     data = list(reader)
 
 # Ask the user for input
-column_to_edit = input("Enter the column you want to edit: ")
-old_value = input(f"Enter the current value in {column_to_edit}: ")
-new_value = input("Enter the new value: ")
+department_to_edit = input("Enter the department: ")
+empid_to_edit = input("Enter the empid: ")
+new_status = input("Enter the new employee status: ")
 
 # Update the specified column in the data list
 for record in data:
-    if record[column_to_edit] == old_value:
-        record[column_to_edit] = new_value
+    if 'EmpID' in record and record['DepartmentType'] == department_to_edit and record['EmpID'] == empid_to_edit:
+        record['EmployeeStatus'] = new_status
 
 # Write the updated data back to the CSV file
 with open(csv_file_path, 'w', newline='') as file:
-    fieldnames = reader.fieldnames
+    fieldnames = ['EmpID', 'FirstName', 'LastName', 'ProjectStartDate', 'ProjectExitDate', 'Title', 'Supervisor', 'ADEmail', 'BusinessUnit', 'EmployeeStatus', 'EmployeeType', 'PayZone', 'EmployeeClassificationType', 'TerminationType', 'TerminationDescription', 'DepartmentType', 'Division', 'DOB', 'State', 'JobFunctionDescription', 'GenderCode', 'LocationCode', 'RaceDesc', 'MaritalDesc', 'Performance Score', 'Current Employee Rating']
     writer = csv.DictWriter(file, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(data)
 
-print(f"{column_to_edit} with value {old_value} updated to {new_value} in {csv_file_path}")
+print(f"Employee status in department {department_to_edit} with empid {empid_to_edit} updated to {new_status} in {csv_file_path}")
