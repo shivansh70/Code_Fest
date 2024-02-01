@@ -10,9 +10,10 @@ import platform
 import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
+from employee_edit import edit_employee_data  # Import the function from employee_edit.py
 
 class EmployeeUtilizationApp:
-    def __init__(self, root):
+    def _init_(self, root):
         self.root = root
         self.root.title("Employee Utilization App")
 
@@ -40,6 +41,10 @@ class EmployeeUtilizationApp:
         self.button_run_agent = ttk.Button(root, text="Run Agent", command=self.run_agent_with_input, state="disabled")
 
         self.button_generate_report = ttk.Button(root, text="Generate Report", command=self.generate_report, state="disabled")
+
+        # Create a new button for employee data editing
+        self.button_edit_data = ttk.Button(root, text="Edit Data", command=self.edit_employee_data, state="disabled")
+        self.button_edit_data.grid(row=9, column=0, columnspan=2, pady=10)
 
         # Grid layout
         self.label_username.grid(row=0, column=0, sticky=tk.W)
@@ -79,6 +84,7 @@ class EmployeeUtilizationApp:
         self.button_voice_input["state"] = "normal"
         self.button_run_agent["state"] = "normal"
         self.button_generate_report["state"] = "normal"
+        self.button_edit_data["state"] = "normal"  # Enable the Edit Data button
 
     def recognize_speech(self):
         recognizer = sr.Recognizer()
@@ -118,6 +124,7 @@ class EmployeeUtilizationApp:
             agent.run(user_input)
 
     def generate_report(self):
+        # ... (unchanged code)
         # Load the dataset
         dataset = pd.read_csv("employee_data.csv")  # Replace with your actual file name
 
@@ -176,7 +183,5 @@ class EmployeeUtilizationApp:
         else:
             print("No specific suggestions. Employee status distribution is balanced.")
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = EmployeeUtilizationApp(root)
-    root.mainloop()
+    def edit_employee_data(self):
+        edit_employee

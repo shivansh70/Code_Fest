@@ -1,28 +1,55 @@
-import csv
-import os
+import pandas as pd
 
-csv_file_path = os.path.abspath("employee_data.csv")
+# Read the CSV file into a DataFrame
+df = pd.read_csv('employee_data.csv')
 
-# Read the CSV file into a list of dictionaries
-with open(csv_file_path, 'r') as file:
-    reader = csv.DictReader(file)
-    data = list(reader)
+# Take user input for the number of EmpIDs to change
+num_empids = int(input("Enter the number of EmpIDs you want to change: "))
 
-# Ask the user for input
-department_to_edit = input("Enter the department: ")
-empid_to_edit = input("Enter the empid: ")
-new_status = input("Enter the new employee status: ")
+for _ in range(num_empids):
+    # Take user input for EmpID
+    emp_id = int(input("Enter EmpID: "))
 
-# Update the specified column in the data list
-for record in data:
-    if 'EmpID' in record and record['DepartmentType'] == department_to_edit and record['EmpID'] == empid_to_edit:
-        record['EmployeeStatus'] = new_status
+    # Find the employee in the DataFrame
+    employee = df[df['EmpID'] == emp_id]
 
-# Write the updated data back to the CSV file
-with open(csv_file_path, 'w', newline='') as file:
-    fieldnames = ['EmpID', 'FirstName', 'LastName', 'ProjectStartDate', 'ProjectExitDate', 'Title', 'Supervisor', 'ADEmail', 'BusinessUnit', 'EmployeeStatus', 'EmployeeType', 'PayZone', 'EmployeeClassificationType', 'TerminationType', 'TerminationDescription', 'DepartmentType', 'Division', 'DOB', 'State', 'JobFunctionDescription', 'GenderCode', 'LocationCode', 'RaceDesc', 'MaritalDesc', 'Performance Score', 'Current Employee Rating']
-    writer = csv.DictWriter(file, fieldnames=fieldnames)
-    writer.writeheader()
-    writer.writerows(data)
+    if not employee.empty:
+        # Display current projects for the selected employee
+        print(f"Current projects for EmpID {emp_id}: {employee['Projects'].values[0]}")
 
-print(f"Employee status in department {department_to_edit} with empid {empid_to_edit} updated to {new_status} in {csv_file_path}")
+        # Check if the current projects count is zero before allowing decrease
+        if employee['Projects'].values[0] == 0:
+            action = 'add'
+        else:
+            # Ask the user whether to add or decrease projects
+            action = input("Do you want to add or decrease projects? (Type 'add' or 'decrease'): ").lower()
+
+        # Take user input for the number of projects to add or decrease
+        project_change = int(input("Enter the number of projects to add or decrease: "))
+
+        # Update the number of projects based on user input
+        if action == 'add':
+            df.loc[df['EmpID'] == emp_id, 'Projects'] += project_change
+        elif action == 'decrease':
+            df.loc[df['EmpID'] == emp_id, 'Projects'] -= project_change
+
+        # Check if the updated projects count is greater than 0 and update EmployeeStatus accordingly
+        if df.loc[df['EmpID'] == emp_id, 'Projects'].values[0] > 0:
+            df.loc[df['EmpID'] == emp_id, 'EmployeeStatus'] = 'Active'
+            # Reset ProjectDivision if projects are greater than 0 and status is made active
+            df.loc[df['EmpID'] == emp_id, 'ProjectDivision'] = ''
+        else:
+            # Set EmployeeStatus to 'Inactive' if projects become 0
+            df.loc[df['EmpID'] == emp_id, 'EmployeeStatus'] = 'Inactive'
+
+            # Ask for project division name if the employee status is inactive
+            project_division = input("Enter the project division name: ")
+            df.loc[df['EmpID'] == emp_id, 'ProjectDivision'] = project_division
+
+    else:
+        print(f"No employee found with EmpID {emp_id}.")
+
+# Save the updated DataFrame to the existing CSV file
+df.to_csv('employee_data.csv', index=False)
+
+print("Updated projects, EmployeeStatus in the existing employee_data.csv for the specified EmpIDs.")

@@ -67,7 +67,7 @@ def process_input():
 
 def run_agent_with_input(input_text):
     filePath = "employee_data.csv"
-    llm = OpenAI(temperature=0, openai_api_key='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')
+    llm = OpenAI(temperature=0, openai_api_key='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')
     agent = create_csv_agent(llm, filePath, verbose=True)
     agent.run(input_text)
 
