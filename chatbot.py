@@ -7,7 +7,7 @@ import tempfile
 import platform
 
 # Set OpenAI API key
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "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"
 
 def recognize_speech():
     recognizer = sr.Recognizer()

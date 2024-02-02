@@ -7,6 +7,7 @@ import speech_recognition as sr
 import pandas as pd
 import matplotlib.pyplot as plt
 from subprocess import run
+import re
 
 # Sample user credentials (replace with your own user data)
 valid_users = {'user1': 'password1', 'user2': 'password2'}
@@ -23,23 +24,36 @@ def set_page_config():
 def style_app():
     st.markdown(
         """
-    <style>
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
+        <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
-        to {
-            opacity: 1;
+        .stApp {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
-    }
-
-    body {
-        animation: fadeIn 1.5s;
-    }
-    </style>
-    """,
+        .stSidebar {
+            background-color: #2e2e2e;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .stMain {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        </style>
+        """,
         unsafe_allow_html=True,
     )
+
 
 def authenticate_user():
     attempts = 3
@@ -94,7 +108,7 @@ def process_input():
 
 def run_agent_with_input(input_text):
     filePath = "employee_data.csv"
-    llm = OpenAI(temperature=0, openai_api_key='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')
+    llm = OpenAI(temperature=0, openai_api_key='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')
     agent = create_csv_agent(llm, filePath, verbose=True)
 
     # Store observations in a list
@@ -109,10 +123,6 @@ def run_agent_with_input(input_text):
 
     st.text_area("Chatbot Response:", chatbot_response, height=200, key="chatbot_response")  # Adjust height as needed
 
-    # Display the observation in the output
-    observation = get_observation()
-    st.text("Observation:")
-    st.dataframe(observation)
 
     # Ask the user if they want to run employee_edit
     run_employee_edit = st.checkbox("Run the employee_edit functionality?", key="run_employee_edit")
@@ -122,7 +132,7 @@ def run_agent_with_input(input_text):
         employee_edit_function()
 
     # Ask the user if they want to see the report
-    show_report = st.checkbox("Show the report?", key="show_report")
+    show_report = st.checkbox("Show the statistics?", key="show_report")
 
     if show_report:
         # Run analysis and generate a report
@@ -136,14 +146,7 @@ def run_agent_with_input(input_text):
     # Clear the conversation list
     conversation.clear()
 
-def get_observation():
-    # Load the dataset
-    dataset = pd.read_csv("employee_data.csv")  # Replace with your actual file name
 
-    # Get the latest observation (last row in the dataset)
-    observation = dataset.iloc[-1:]
-
-    return observation
 
 
 
