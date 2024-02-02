@@ -108,7 +108,7 @@ def process_input():
 
 def run_agent_with_input(input_text):
     filePath = "employee_data.csv"
-    llm = OpenAI(temperature=0, openai_api_key='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')
+    llm = OpenAI(temperature=0, openai_api_key='#')
     agent = create_csv_agent(llm, filePath, verbose=True)
 
     # Store observations in a list
@@ -229,15 +229,26 @@ def employee_edit_function():
             # Display current projects for the selected employee
             st.text(f"Current projects for EmpID {emp_id}: {employee['Projects'].values[0]}")
 
-            # Check if the current projects count is zero before allowing decrease
-            if employee['Projects'].values[0] == 0:
-                action = 'add'
-            else:
-                # Ask the user whether to add or decrease projects
-                action = st.selectbox("Do you want to add or decrease projects?", ['add', 'decrease'], key="action")
+            # Ask the user whether to add or decrease projects
+            action = st.selectbox("Do you want to add or decrease projects?", ['add', 'decrease'], key="action")
 
             # Take user input for the number of projects to add or decrease
             project_change = int(st.text_input("Enter the number of projects to add or decrease:", key="project_change"))
+
+            if action == 'add':
+                # Prompt the user to enter the project division name for addition
+                st.text("Enter the project division names for addition:")
+                project_divisions = [st.text_input(f"Project Division {i + 1}:") for i in range(project_change)]
+                if project_change < 0:
+                    st.warning("Project count cannot be less than 0. Please enter a valid count.")
+                    return
+            else:
+                # Prompt the user to enter the project division name for decrease
+                st.text("Enter the project division names for decrease:")
+                project_divisions = [st.text_input(f"Project Division {i + 1}:") for i in range(project_change)]
+                if project_change > employee['Projects'].values[0]:
+                    st.warning(f"Project count cannot be decreased by {project_change}. It is greater than the current count.")
+                    return
 
             # Save the current row for later comparison
             old_row = employee.copy()
@@ -245,30 +256,46 @@ def employee_edit_function():
             # Update the number of projects based on user input
             if action == 'add':
                 df.loc[df['EmpID'] == emp_id, 'Projects'] += project_change
+
+                # Update the project divisions
+                existing_divisions = df.loc[df['EmpID'] == emp_id, 'ProjectDivision'].values[0].split(',')
+                for division in project_divisions:
+                    if division not in existing_divisions:
+                        existing_divisions.append(division)
+
+                df.loc[df['EmpID'] == emp_id, 'ProjectDivision'] = ','.join(existing_divisions)
+
             elif action == 'decrease':
                 df.loc[df['EmpID'] == emp_id, 'Projects'] -= project_change
 
-            # Check if the updated projects count is greater than 0 and update EmployeeStatus accordingly
-            if df.loc[df['EmpID'] == emp_id, 'Projects'].values[0] > 0:
-                df.loc[df['EmpID'] == emp_id, 'EmployeeStatus'] = 'Active'
-                # Reset ProjectDivision if projects are greater than 0 and status is made active
-                df.loc[df['EmpID'] == emp_id, 'ProjectDivision'] = ''
+                # Remove the project divisions
+                existing_divisions = df.loc[df['EmpID'] == emp_id, 'ProjectDivision'].values[0].split(',')
+                for division in project_divisions:
+                    if division in existing_divisions:
+                        existing_divisions.remove(division)
+
+                df.loc[df['EmpID'] == emp_id, 'ProjectDivision'] = ','.join(existing_divisions)
+
+            # Check if the updated projects count is greater than or equal to 0
+            if df.loc[df['EmpID'] == emp_id, 'Projects'].values[0] >= 0:
+                # Check if the updated projects count is greater than 0 and update EmployeeStatus accordingly
+                if df.loc[df['EmpID'] == emp_id, 'Projects'].values[0] > 0:
+                    df.loc[df['EmpID'] == emp_id, 'EmployeeStatus'] = 'Active'
+                else:
+                    # Set EmployeeStatus to 'Inactive' if projects become 0
+                    df.loc[df['EmpID'] == emp_id, 'EmployeeStatus'] = 'Inactive'
+
+                # Show the entire updated row
+                st.text("Updated row:")
+                st.dataframe(df[df['EmpID'] == emp_id])
+
+                # You can also show the changes in each column
+                st.text("Changes:")
+                st.text(f"Projects Change: {old_row['Projects'].values[0]} -> {df.loc[df['EmpID'] == emp_id, 'Projects'].values[0]}")
+                st.text(f"EmployeeStatus Change: {old_row['EmployeeStatus'].values[0]} -> {df.loc[df['EmpID'] == emp_id, 'EmployeeStatus'].values[0]}")
+
             else:
-                # Set EmployeeStatus to 'Inactive' if projects become 0
-                df.loc[df['EmpID'] == emp_id, 'EmployeeStatus'] = 'Inactive'
-
-                # Ask for project division name if the employee status is inactive
-                project_division = st.text_input("Enter the project division name:", key="project_division")
-                df.loc[df['EmpID'] == emp_id, 'ProjectDivision'] = project_division
-
-            # Show the entire updated row
-            st.text("Updated row:")
-            st.dataframe(df[df['EmpID'] == emp_id])
-
-            # You can also show the changes in each column
-            st.text("Changes:")
-            st.text(f"Projects Change: {old_row['Projects'].values[0]} -> {df.loc[df['EmpID'] == emp_id, 'Projects'].values[0]}")
-            st.text(f"EmployeeStatus Change: {old_row['EmployeeStatus'].values[0]} -> {df.loc[df['EmpID'] == emp_id, 'EmployeeStatus'].values[0]}")
+                st.warning("Project count cannot be less than 0. Please enter a valid count.")
 
         else:
             st.text(f"No employee found with EmpID {emp_id}.")
@@ -276,7 +303,7 @@ def employee_edit_function():
     # Save the updated DataFrame to the existing CSV file
     df.to_csv('employee_data.csv', index=False)
 
-    st.success("Updated projects, EmployeeStatus in the existing employee_data.csv for the specified EmpIDs.")
+    st.success("Updated projects, EmployeeStatus, and ProjectDivision in the existing employee_data.csv for the specified EmpIDs.")
 
 if __name__ == "__main__":
     set_page_config()
